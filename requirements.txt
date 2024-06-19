@@ -1,7 +1,3 @@
 Flask
 google-generativeai
 pymupdf
-requests
-pandas
-numpy
-PyMuPDF
