@@ -5,36 +5,54 @@ import os
 import fitz
 
 wa_token=os.environ.get("WA_TOKEN")
+
+# Configuração do cliente da API Generativa
 genai.configure(api_key=os.environ.get("GEN_API"))
+
 phone_id=os.environ.get("PHONE_ID")
 phone=os.environ.get("PHONE_NUMBER")
 name="Sette" #The bot will consider this person as its owner or creator
 bot_name="Luna" #This will be the name of your bot, eg: "Hello I am Astro Bot"
+
+# Configuração do modelo de inteligência artificial
+# Define qual versão do assistente digital é usada para responder às mensagens.
 model_name="gemini-1.5-flash-latest"
 
+# Inicialização do Flask (Web Application)
 app=Flask(__name__)
 
+# Configurações de geração de respostas do modelo:
 generation_config = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 0,
-  "max_output_tokens": 8192,
+    "temperature": 1,  # Define a variabilidade nas respostas: um valor mais alto permite respostas mais diversificadas.
+    "top_p": 0.95,  # Limita as respostas às palavras/tokens/partes do texto mais prováveis, garantindo que as respostas sejam relevantes e de alta qualidade.
+    "top_k": 0,  # Não impõe um limite fixo no número de palavras/tokens/partes do texto consideradas, focando na qualidade das mais prováveis.
+    "max_output_tokens": 8192,  # Estabelece um limite alto para o comprimento das respostas, permitindo explicações detalhadas se necessário.
 }
 
+# Configurações de segurança para manter o conteúdo gerado apropriado e seguro:
 safety_settings = [
-  {"category": "HARM_CATEGORY_HARASSMENT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-  {"category": "HARM_CATEGORY_HATE_SPEECH","threshold": "BLOCK_MEDIUM_AND_ABOVE"},  
-  {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-  {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Previne respostas que possam ser interpretadas como assédio.
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Bloqueia o uso de linguagem de ódio.
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Impede conteúdo sexualmente explícito.
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Evita conteúdo que possa ser considerado perigoso.
 ]
 
+# Criando o modelo com as configurações definidas
 model = genai.GenerativeModel(model_name=model_name,
                               generation_config=generation_config,
                               safety_settings=safety_settings)
 
+# Configuração inicial de conversa do modelo
+# Esta parte do código inicia uma nova conversa com o modelo de IA configurado. 
+# `model.start_chat(history=[])`: Inicia uma conversa limpa sem qualquer histórico prévio.
+# Isso é útil para garantir que a sessão do bot seja independente e não seja influenciada por interações anteriores.
 convo = model.start_chat(history=[
 ])
 
+# Envio de mensagem inicial de configuração para o modelo.
+# A mensagem define a identidade e o contexto operacional do bot para que ele se "conscientize" de sua função.
+# A mensagem orienta o modelo a não responder a este prompt inicial, pois serve apenas para estabelecer o contexto,
+# e não para iniciar uma interação. Isso é útil para preparar o bot antes de começar a interagir com os usuários reais.
 convo.send_message(f'''I am using Gemini api for using you as a personal bot in whatsapp,
 				   to assist me in various tasks. 
 				   So from now you are "{bot_name}" created by {name} ( Yeah it's me, my name is {name}). 
