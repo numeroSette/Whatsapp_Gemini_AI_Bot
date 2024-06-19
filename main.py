@@ -2,7 +2,7 @@ import google.generativeai as genai
 from flask import Flask,request,jsonify
 import requests
 import os
-import fitz
+import fitz # PyMuPDF
 
 wa_token=os.environ.get("WA_TOKEN")
 
@@ -120,49 +120,69 @@ def webhook_validate():
     else:
         return "Failed", 403
 
+# Função auxiliar para tratar mensagens de texto
+def handle_text_message(data):
+    prompt = data["text"]["body"]
+    convo.send_message(prompt)
+    send(convo.last.text)
+
+# Função auxiliar para tratar mensagens de mídia
+def handle_media_message(data):
+    media_type = data["type"]
+    media_id = data[media_type]["id"]
+    media_url_endpoint = f'https://graph.facebook.com/v18.0/{media_id}/'
+    headers = {'Authorization': f'Bearer {wa_token}'}
+
+    try:
+        media_response = requests.get(media_url_endpoint, headers=headers)
+        media_url = media_response.json()["url"]
+        media_content = requests.get(media_url, headers=headers).content
+
+        if media_type == "audio":
+            filename = "/tmp/temp_audio.mp3"
+        elif media_type == "image":
+            filename = "/tmp/temp_image.jpg"
+        elif media_type == "document":
+            filename = handle_document(media_content)
+
+        with open(filename, "wb") as file:
+            file.write(media_content)
+
+        response_text = generate_response_from_media(filename)
+        send(response_text)
+        remove(filename)
+
+    except requests.RequestException as e:
+        print(f"Failed to download or handle media: {e}")
+        send("There was an error processing your media.")
+
+# Função auxiliar para documentos PDF
+def handle_document(content):
+    filename = "/tmp/temp_pdf_document.pdf"
+    with open(filename, "wb") as file:
+        file.write(content)
+    return filename
+
+# Função para gerar resposta a partir de mídia
+def generate_response_from_media(filename):
+    file = genai.upload_file(path=filename, display_name="tempfile")
+    response = model.generate_content(["Analyze this content", file])
+    answer = response._result.candidates[0].content.parts[0].text
+    remove(filename)  # Clean up temporary file
+    return answer
+
 @app.route("/webhook", methods=["POST"])
 def webhook_execute():
     try:
         data = request.get_json()["entry"][0]["changes"][0]["value"]["messages"][0]
         if data["type"] == "text":
-            prompt = data["text"]["body"]
-            convo.send_message(prompt)
-            send(convo.last.text)
+            handle_text_message(data)
         else:
-            media_url_endpoint = f'https://graph.facebook.com/v18.0/{data[data["type"]]["id"]}/'
-            headers = {'Authorization': f'Bearer {wa_token}'}
-            media_response = requests.get(media_url_endpoint, headers=headers)
-            media_url = media_response.json()["url"]
-            media_download_response = requests.get(media_url, headers=headers)
-            if data["type"] == "audio":
-                filename = "/tmp/temp_audio.mp3"
-            elif data["type"] == "image":
-                filename = "/tmp/temp_image.jpg"
-            elif data["type"] == "document":
-                doc=fitz.open(stream=media_download_response.content,filetype="pdf")
-                for _,page in enumerate(doc):
-                    destination="/tmp/temp_image.jpg"
-                    pix = page.get_pixmap()
-                    pix.save(destination)
-                    file = genai.upload_file(path=destination,display_name="tempfile")
-                    response = model.generate_content(["What is this",file])
-                    answer=response._result.candidates[0].content.parts[0].text
-                    convo.send_message(f"Direct image input has limitations, so this message is created by an llm model based on the image prompt of user, reply to the user assuming you saw that image: {answer}")
-                    send(convo.last.text)
-                    remove(destination)
-            else:send("This format is not Supported by the bot ☹")
-            with open(filename, "wb") as temp_media:
-                temp_media.write(media_download_response.content)
-            file = genai.upload_file(path=filename,display_name="tempfile")
-            response = model.generate_content(["What is this",file])
-            answer=response._result.candidates[0].content.parts[0].text
-            remove("/tmp/temp_image.jpg","/tmp/temp_audio.mp3")
-            convo.send_message(f"Direct media input has limitations, so this is a voice/image message from user which is transcribed by an llm model, reply to the user assuming you heard/saw media file: {answer}")
-            send(convo.last.text)
-            files=genai.list_files()
-            for file in files:
-                file.delete()
-    except :pass
+            handle_media_message(data)
+    except Exception as e:
+        print(f"Error handling webhook data: {e}")
+        return jsonify({"status": "error"}), 500
     return jsonify({"status": "ok"}), 200
+
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
