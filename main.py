@@ -15,20 +15,32 @@ bot_name = "Luna"  # Nome do bot
 
 # Configuração do cliente da API Generativa
 genai.configure(api_key=gen_api_key)
-model_name = "gemini-1.5-flash-latest"
+
+# Configuração do modelo de inteligência artificial
+model_name = "gemini-1.5-flash-latest"  # Define qual versão do assistente digital é usada para responder às mensagens.
+
+# Configurações de geração de respostas do modelo:
 generation_config = {
-    "temperature": 1,
-    "top_p": 0.95,
-    "top_k": 0,
-    "max_output_tokens": 8192,
+    "temperature": 1,  # Define a variabilidade nas respostas: um valor mais alto permite respostas mais diversificadas.
+    "top_p": 0.95,  # Limita as respostas às palavras/tokens/partes do texto mais prováveis, garantindo que as respostas sejam relevantes e de alta qualidade.
+    "top_k": 0,  # Não impõe um limite fixo no número de palavras/tokens/partes do texto consideradas, focando na qualidade das mais prováveis.
+    "max_output_tokens": 8192,  # Estabelece um limite alto para o comprimento das respostas, permitindo explicações detalhadas se necessário.
 }
+
+# Configurações de segurança para manter o conteúdo gerado apropriado e seguro:
 safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Previne respostas que possam ser interpretadas como assédio.
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Bloqueia o uso de linguagem de ódio.
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Impede conteúdo sexualmente explícito.
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},  # Evita conteúdo que possa ser considerado perigoso.
 ]
-model = genai.GenerativeModel(model_name=model_name, generation_config=generation_config, safety_settings=safety_settings)
+
+# Criando o modelo com as configurações definidas
+model = genai.GenerativeModel(
+    model_name=model_name,
+    generation_config=generation_config,
+    safety_settings=safety_settings
+)
 
 # Inicialização do Flask
 app = Flask(__name__)
