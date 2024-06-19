@@ -126,7 +126,6 @@ def handle_text_message(data):
     convo.send_message(prompt)
     send(convo.last.text)
 
-# Função auxiliar para tratar mensagens de mídia
 def handle_media_message(data):
     media_type = data["type"]
     media_id = data[media_type]["id"]
@@ -138,30 +137,82 @@ def handle_media_message(data):
         media_url = media_response.json()["url"]
         media_content = requests.get(media_url, headers=headers).content
 
-        if media_type == "audio":
-            filename = "/tmp/temp_audio.mp3"
-        elif media_type == "image":
-            filename = "/tmp/temp_image.jpg"
-        elif media_type == "document":
-            filename = handle_document(media_content)
-
+        filename = f"/tmp/temp_{media_type}"
         with open(filename, "wb") as file:
             file.write(media_content)
 
-        response_text = generate_response_from_media(filename)
-        send(response_text)
+        if media_type == "audio":
+            text = generate_response_from_media(filename)
+        elif media_type == "image":
+            text = generate_response_from_media(filename)
+        elif media_type == "document":
+            text = handle_document(filename)
+        
+        convo.send_message(text)
+        send(convo.last.text)
         remove(filename)
 
     except requests.RequestException as e:
         print(f"Failed to download or handle media: {e}")
         send("There was an error processing your media.")
 
-# Função auxiliar para documentos PDF
-def handle_document(content):
-    filename = "/tmp/temp_pdf_document.pdf"
-    with open(filename, "wb") as file:
-        file.write(content)
-    return filename
+# # Função auxiliar para tratar mensagens de mídia
+# def handle_media_message(data):
+#     media_type = data["type"]
+#     media_id = data[media_type]["id"]
+#     media_url_endpoint = f'https://graph.facebook.com/v18.0/{media_id}/'
+#     headers = {'Authorization': f'Bearer {wa_token}'}
+
+#     try:
+#         media_response = requests.get(media_url_endpoint, headers=headers)
+#         media_url = media_response.json()["url"]
+#         media_content = requests.get(media_url, headers=headers).content
+
+#         if media_type == "audio":
+#             filename = "/tmp/temp_audio.mp3"
+#         elif media_type == "image":
+#             filename = "/tmp/temp_image.jpg"
+#         elif media_type == "document":
+#             filename = handle_document(media_content)
+
+#         with open(filename, "wb") as file:
+#             file.write(media_content)
+
+#         response_text = generate_response_from_media(filename)
+#         send(response_text)
+#         remove(filename)
+
+#     except requests.RequestException as e:
+#         print(f"Failed to download or handle media: {e}")
+#         send("There was an error processing your media.")
+
+def handle_document(file_path):
+    """
+    Extrai texto de um documento PDF e envia para análise ou resposta.
+    Args:
+        file_path (str): Caminho do arquivo PDF.
+    """
+    text = ""
+    try:
+        doc = fitz.open(file_path)
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+    except Exception as e:
+        print(f"Erro ao processar o PDF: {e}")
+        return "Não foi possível extrair o texto do documento."
+
+    # Aqui você pode enviar o texto extraído para o modelo ou para qualquer outra análise necessária.
+    convo.send_message(text)
+    send(convo.last.text)
+    return text
+
+# # Função auxiliar para documentos PDF
+# def handle_document(content):
+#     filename = "/tmp/temp_pdf_document.pdf"
+#     with open(filename, "wb") as file:
+#         file.write(content)
+#     return filename
 
 # Função para gerar resposta a partir de mídia
 def generate_response_from_media(filename):
