@@ -23,7 +23,7 @@ app=Flask(__name__)
 
 # Configurações de geração de respostas do modelo:
 generation_config = {
-    "temperature": 0.5,  # Reduz a probabilidade de respostas imprevisíveis e mantém o foco.
+    "temperature": 0.1,  # Reduz a probabilidade de respostas imprevisíveis e mantém o foco.
     "top_p": 0.85,  # Restringe as respostas aos tokens mais prováveis, aumentando a relevância.
     "top_k": 30,  # Limita as respostas aos 30 tokens mais prováveis em cada passo da geração.
     "max_output_tokens": 512,  # Limita o comprimento das respostas para focar em concisão.
