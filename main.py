@@ -8,8 +8,8 @@ wa_token=os.environ.get("WA_TOKEN")
 genai.configure(api_key=os.environ.get("GEN_API"))
 phone_id=os.environ.get("PHONE_ID")
 phone=os.environ.get("PHONE_NUMBER")
-name="Your name or nickname" #The bot will consider this person as its owner or creator
-bot_name="Give a name to your bot" #This will be the name of your bot, eg: "Hello I am Astro Bot"
+name="Sette #The bot will consider this person as its owner or creator
+bot_name="Luna" #This will be the name of your bot, eg: "Hello I am Astro Bot"
 model_name="gemini-1.5-flash-latest"
 
 app=Flask(__name__)
