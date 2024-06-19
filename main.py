@@ -62,33 +62,56 @@ convo.send_message(f'''I am using Gemini api for using you as a personal bot in 
 				   So reply to only the prompts after this. Remeber your new identity is {bot_name}.''')
 
 def send(answer):
+    """
+    Envia uma mensagem de texto via WhatsApp usando a Graph API do Facebook.
+    Args:
+        answer (str): A mensagem de texto a ser enviada.
+    Returns:
+        response: Objeto Response da chamada da API.
+    """
     url=f"https://graph.facebook.com/v18.0/{phone_id}/messages"
     headers={
         'Authorization': f'Bearer {wa_token}',
         'Content-Type': 'application/json'
     }
     data={
-          "messaging_product": "whatsapp", 
-          "to": f"{phone}", 
-          "type": "text",
-          "text":{"body": f"{answer}"},
-          }
-    
-    response=requests.post(url, headers=headers,json=data)
+        "messaging_product": "whatsapp",
+        "to": f"{phone}",
+        "type": "text",
+        "text":{"body": f"{answer}"}
+    }
+    try:
+        response=requests.post(url, headers=headers,json=data)
+        response.raise_for_status()  # Lança um erro para respostas de falha
+    except requests.exceptions.RequestException as e:
+        print(f"Erro ao enviar mensagem: {e}")
+        return None
     return response
 
 def remove(*file_paths):
-    for file in file_paths:
-        if os.path.exists(file):
-            os.remove(file)
-        else:pass
+    """
+    Remove arquivos do sistema de arquivos se eles existirem.
+    Args:
+        *file_paths: Caminhos dos arquivos a serem removidos.
+    """
+    for file_path in file_paths:
+        try:
+            os.remove(file_path)
+        except OSError as e:
+            print(f"Erro ao remover o arquivo {file_path}: {e}")
 
 @app.route("/",methods=["GET","POST"])
 def index():
+    """
+    Rota raiz que simplesmente retorna 'Bot', pode ser usada para verificações básicas de saúde.
+    """
     return "Bot"
 
 @app.route("/webhook", methods=["GET"])
 def webhook_validate():
+    """
+    Valida as solicitações de webhook do Facebook para garantir que o bot possa receber atualizações.
+    """
     mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
