@@ -204,7 +204,7 @@ def handle_document(file_path):
 
     # Aqui você pode enviar o texto extraído para o modelo ou para qualquer outra análise necessária.
     # convo.send_message(text)
-    send(convo.last.text)
+    # send(convo.last.text)
     return text
 
 # # Função auxiliar para documentos PDF
