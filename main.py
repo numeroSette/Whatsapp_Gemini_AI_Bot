@@ -203,7 +203,7 @@ def handle_document(file_path):
         return "Não foi possível extrair o texto do documento."
 
     # Aqui você pode enviar o texto extraído para o modelo ou para qualquer outra análise necessária.
-    convo.send_message(text)
+    # convo.send_message(text)
     send(convo.last.text)
     return text
 
