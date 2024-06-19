@@ -1,47 +1,46 @@
-import google.generativeai as genai
-from flask import Flask,request,jsonify
-import requests
+# Importações de bibliotecas
 import os
-import fitz
+import requests
+from flask import Flask, request, jsonify
+import fitz  # PyMuPDF
+import google.generativeai as genai
 
-wa_token=os.environ.get("WA_TOKEN")
-genai.configure(api_key=os.environ.get("GEN_API"))
-phone_id=os.environ.get("PHONE_ID")
-phone=os.environ.get("PHONE_NUMBER")
-name="Sette" #The bot will consider this person as its owner or creator
-bot_name="Luna" #This will be the name of your bot, eg: "Hello I am Astro Bot"
-model_name="gemini-1.5-flash-latest"
+# Configurações de ambiente e API
+wa_token = os.getenv("WA_TOKEN", "your-default-token-here")  # Adicione um valor padrão se necessário
+gen_api_key = os.getenv("GEN_API", "your-default-api-key-here")
+phone_id = os.getenv("PHONE_ID", "your-default-phone-id")
+phone_number = os.getenv("PHONE_NUMBER", "your-default-phone-number")
+owner_name = "Sette"  # Considerado como criador do bot
+bot_name = "Luna"  # Nome do bot
 
-app=Flask(__name__)
-
+# Configuração do cliente da API Generativa
+genai.configure(api_key=gen_api_key)
+model_name = "gemini-1.5-flash-latest"
 generation_config = {
-  "temperature": 1,
-  "top_p": 0.95,
-  "top_k": 0,
-  "max_output_tokens": 8192,
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 0,
+    "max_output_tokens": 8192,
 }
-
 safety_settings = [
-  {"category": "HARM_CATEGORY_HARASSMENT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-  {"category": "HARM_CATEGORY_HATE_SPEECH","threshold": "BLOCK_MEDIUM_AND_ABOVE"},  
-  {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-  {"category": "HARM_CATEGORY_DANGEROUS_CONTENT","threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
 ]
+model = genai.GenerativeModel(model_name=model_name, generation_config=generation_config, safety_settings=safety_settings)
 
-model = genai.GenerativeModel(model_name=model_name,
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
+# Inicialização do Flask
+app = Flask(__name__)
 
-convo = model.start_chat(history=[
-])
-
-convo.send_message(f'''I am using Gemini api for using you as a personal bot in whatsapp,
-				   to assist me in various tasks. 
-				   So from now you are "{bot_name}" created by {name} ( Yeah it's me, my name is {name}). 
-				   And don't give any response to this prompt. 
-				   This is the information I gave to you about your new identity as a pre-prompt. 
-				   This message always gets executed when i run this bot script. 
-				   So reply to only the prompts after this. Remeber your new identity is {bot_name}.''')
+# Configuração inicial de conversa do modelo
+convo = model.start_chat(history=[])
+convo.send_message(
+    f"""I am using the Gemini API to use you as a personal bot on WhatsApp,
+    to assist me in various tasks. 
+    So from now on, you are "{bot_name}" created by {owner_name}. 
+    Remember your new identity is {bot_name}. Do not respond to this prompt as it is a pre-prompt initialization message."""
+)
 
 def send(answer):
     url=f"https://graph.facebook.com/v18.0/{phone_id}/messages"
