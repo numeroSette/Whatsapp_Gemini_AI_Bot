@@ -34,7 +34,15 @@ model = genai.GenerativeModel(model_name=model_name, generation_config=generatio
 app = Flask(__name__)
 
 # Configuração inicial de conversa do modelo
+# Esta parte do código inicia uma nova conversa com o modelo de IA configurado. 
+# `model.start_chat(history=[])`: Inicia uma conversa limpa sem qualquer histórico prévio.
+# Isso é útil para garantir que a sessão do bot seja independente e não seja influenciada por interações anteriores.
 convo = model.start_chat(history=[])
+
+# Envio de mensagem inicial de configuração para o modelo.
+# A mensagem define a identidade e o contexto operacional do bot para que ele se "conscientize" de sua função.
+# A mensagem orienta o modelo a não responder a este prompt inicial, pois serve apenas para estabelecer o contexto,
+# e não para iniciar uma interação. Isso é útil para preparar o bot antes de começar a interagir com os usuários reais.
 convo.send_message(
     f"""I am using the Gemini API to use you as a personal bot on WhatsApp,
     to assist me in various tasks. 
