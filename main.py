@@ -23,7 +23,7 @@ app=Flask(__name__)
 
 # Configurações de geração de respostas do modelo:
 generation_config = {
-    "temperature": 1,  # Define a variabilidade nas respostas: um valor mais alto permite respostas mais diversificadas.
+    "temperature": 0.5,  # Define a variabilidade nas respostas: um valor mais alto permite respostas mais diversificadas.
     "top_p": 0.95,  # Limita as respostas às palavras/tokens/partes do texto mais prováveis, garantindo que as respostas sejam relevantes e de alta qualidade.
     "top_k": 0,  # Não impõe um limite fixo no número de palavras/tokens/partes do texto consideradas, focando na qualidade das mais prováveis.
     "max_output_tokens": 8192,  # Estabelece um limite alto para o comprimento das respostas, permitindo explicações detalhadas se necessário.
